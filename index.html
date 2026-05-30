@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Публічні комерційні пропозиції — slider</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800;900&display=swap"
+    rel="stylesheet"
+  />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!--
+    SLIDER
+    ──────────────────────────────────────────────────────────────
+    Layout:
+      .slider__head     → static title + navigation arrows
+      .slider__viewport → clips the moving track (overflow hidden)
+        .slider__track  → the row of cards, transformed by JS
+      .slider__progress → progress line synced with the scroll
+    The whole motion (drag / wheel / arrows / stacking / parallax)
+    is driven from script.js.
+  -->
+  <section class="slider" aria-label="Публічні комерційні пропозиції">
+    <div class="slider__inner">
+
+      <!-- ===== Left / top column: heading + controls ===== -->
+      <div class="slider__head">
+        <h2 class="slider__title">
+          Публічні <span class="accent">комерційні</span> пропозиції
+        </h2>
+
+        <!-- Navigation arrows (top-right on tablet/mobile, used everywhere) -->
+        <div class="slider__nav" role="group" aria-label="Навігація по слайдеру">
+          <button class="nav-btn nav-btn--prev" type="button" aria-label="Попередня картка">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.2"
+                stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </button>
+          <button class="nav-btn nav-btn--next" type="button" aria-label="Наступна картка">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.2"
+                stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </button>
+        </div>
+
+        <!-- Desktop progress line + arrow (matches the hover reference) -->
+        <div class="slider__progress" aria-hidden="true">
+          <span class="slider__progress-track">
+            <span class="slider__progress-fill"></span>
+          </span>
+          <button class="slider__progress-arrow nav-btn nav-btn--next" type="button"
+            aria-label="Наступна картка">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.2"
+                stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- ===== Right / bottom column: the moving cards ===== -->
+      <div class="slider__viewport">
+        <ul class="slider__track" id="track">
+          <!-- Cards are generated from this template by JS so the
+               markup stays DRY; see CARDS array in script.js -->
+        </ul>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Card template (cloned by JS) -->
+  <template id="card-tpl">
+    <li class="card">
+      <div class="card__inner">
+        <span class="card__no"></span>
+
+        <div class="card__body">
+          <p class="card__metric"><b class="card__metric-value"></b><span class="card__metric-label"></span></p>
+          <p class="card__metric"><b class="card__metric-value"></b><span class="card__metric-label"></span></p>
+          <p class="card__desc"></p>
+        </div>
+
+        <div class="card__footer">
+          <button class="card__eye" type="button" aria-label="Переглянути">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z" fill="none"
+                stroke="currentColor" stroke-width="1.8" />
+              <circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.8" />
+            </svg>
+          </button>
+
+          <a class="card__download" href="#" download>
+            <span class="card__download-text">
+              <b>Завантажити</b>
+              <small>pdf, 320 Kb</small>
+            </span>
+            <span class="card__download-icon">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 3v11m0 0l-4-4m4 4l4-4M5 19h14" fill="none" stroke="currentColor"
+                  stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            </span>
+          </a>
+        </div>
+      </div>
+    </li>
+  </template>
+
+  <script src="script.js"></script>
+</body>
+</html>
