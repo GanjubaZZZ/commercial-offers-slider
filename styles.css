@@ -336,7 +336,6 @@ html, body {
   :root {
     --page-pad: 24px;
     --card-w: min(300px, calc(100vw - (var(--page-pad) * 2)));
-    --gap: 16px;
   }
   .slider {
     padding-block: 42px;

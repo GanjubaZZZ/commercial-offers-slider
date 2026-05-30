@@ -95,9 +95,12 @@ function measure() {
   const oldLoop = loopWidth;
   const phase = oldLoop > 1 ? wrap(pos, oldLoop) : 0;
 
-  // CSS can use min()/calc()/clamp() for responsive card width; measure
-  // the rendered element so the infinite loop stays pixel-perfect.
-  cardW = cards[0]?.el.getBoundingClientRect().width || readVar('--card-w');
+  // CSS can use min()/calc()/clamp() for responsive card width, so we
+  // measure the rendered element. IMPORTANT: use offsetWidth (layout
+  // width) and not getBoundingClientRect() — the latter is affected by
+  // the live scale transform, which on resize would report a shrunken
+  // stacked card and make the step (and thus the gap) collapse.
+  cardW = cards[0]?.el.offsetWidth || readVar('--card-w');
   step = cardW + readVar('--gap');
   loopWidth = CARDS.length * step;
   viewportW = Math.max(window.innerWidth, viewport.getBoundingClientRect().width);
@@ -119,21 +122,26 @@ function normalizeLoop() {
 }
 
 /* ---------- 5. Continuous card transform calculation ---------- */
-function getCardState(rawX, virtualIndex) {
+function getCardState(rawX) {
   let x = rawX;
-  let scale = 1;
+  let scaleX = 1;
+  let scaleY = 1;
   let opacity = 1;
   let parallax = rawX * STACK.parallax;
 
   if (rawX < 0) {
+    // Stacked cards shrink uniformly as they pile up on the left.
     const depth = clamp(-rawX / step, 0, STACK.maxDepth);
     x = -depth * STACK.offsetX;
-    scale = 1 - depth * STACK.scaleStep;
+    scaleX = scaleY = 1 - depth * STACK.scaleStep;
     opacity = Math.max(1 - depth * STACK.opacityStep, STACK.minOpacity);
     parallax = 0;
   } else {
+    // Flowing cards keep their full WIDTH, so the 5px gap between cards
+    // stays exact on every device. The active (left-edge) card only
+    // grows in HEIGHT to stand out — that never eats the spacing.
     const focus = 1 - clamp(rawX / step, 0, 1);
-    scale += focus * (ACTIVE_SCALE - 1);
+    scaleY = 1 + focus * (ACTIVE_SCALE - 1);
   }
 
   const farRight = rawX > viewportW + cardW * 2;
@@ -141,12 +149,15 @@ function getCardState(rawX, virtualIndex) {
 
   return {
     x,
-    scale,
+    scaleX,
+    scaleY,
     opacity: farRight || farLeft ? 0 : opacity,
-    // Later virtual cards always sit above earlier ones.
-    // This is the core deck rule: the incoming card naturally covers
-    // the previous one instead of suddenly jumping or sinking.
-    z: 1000 + virtualIndex,
+    // Deck rule: the closer a card is to the left (active) edge, the
+    // higher it sits. So the selected green card is always on top and
+    // every card to the right slides UNDER the previous one, keeping
+    // the right-hand cards' text readable. Continuous distance => no
+    // sudden z-index jumps.
+    z: Math.round(1e6 - Math.abs(rawX)),
     parallax,
   };
 }
@@ -158,7 +169,7 @@ function render() {
 
   cards.forEach((card) => {
     const rawX = card.virtualIndex * step - pos;
-    const state = getCardState(rawX, card.virtualIndex);
+    const state = getCardState(rawX);
     const isActive = card.baseIndex === activeBase && Math.abs(rawX) < step / 2;
 
     card.el.classList.toggle('is-active', isActive);
@@ -170,7 +181,7 @@ function render() {
       card.el.style.background = `rgb(${r}, ${g}, ${b})`;
     }
 
-    card.el.style.transform = `translate3d(${state.x}px, 0, 0) scale3d(${state.scale}, ${state.scale}, 1)`;
+    card.el.style.transform = `translate3d(${state.x}px, 0, 0) scale3d(${state.scaleX}, ${state.scaleY}, 1)`;
     card.el.style.opacity = state.opacity;
     card.el.style.zIndex = state.z;
     card.inner.style.transform = `translate3d(${state.parallax}px, 0, 0)`;
