@@ -3,15 +3,19 @@
    Palette taken from the design references.
    ============================================================ */
 :root {
-  --green:      #b3d23a;   /* lime accent / active card        */
-  --green-dark: #9cbd2c;   /* download icon circle             */
-  --ink:        #16202b;   /* dark navy headline               */
+  --green:      #a6c93a;   /* lime accent / active card        */
+  --green-dark: #95b82c;   /* download icon circle             */
+  --ink:        #16222e;   /* dark navy headline / dark text   */
   --card-dark:  #38424b;   /* darkest card background          */
   --card-gray:  #8c99a0;   /* lightest card background         */
   --bg:         #ffffff;
   --white-70:   rgba(255, 255, 255, .72);
   --white-45:   rgba(255, 255, 255, .5);
   --page-pad:   clamp(16px, 5vw, 64px);
+
+  /* Typography: geometric grotesque for display, neutral for body */
+  --font-display: "Montserrat", system-ui, sans-serif;
+  --font-body:    "Inter", system-ui, sans-serif;
 
   /* These two are READ by JS to compute card positions.
      Change them freely per breakpoint below. */
@@ -28,7 +32,7 @@ html, body {
   margin: 0;
   background: var(--bg);
   color: var(--ink);
-  font-family: "Montserrat", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
   /* Clip ONLY at the real monitor edge so cards can bleed full-width
      to the right without ever creating a horizontal page scrollbar. */
@@ -70,7 +74,8 @@ html, body {
 
 .slider__title {
   margin: 0;
-  font-weight: 900;
+  font-family: var(--font-display);
+  font-weight: 800;
   font-size: clamp(34px, 4.4vw, 64px);
   line-height: .98;
   letter-spacing: -0.5px;
@@ -101,15 +106,15 @@ html, body {
   display: grid;
   place-items: center;
   cursor: pointer;
-  color: var(--ink);
-  background: #e9ebed;
+  color: #8d999f;            /* prev arrow: muted gray */
+  background: #e6e8ea;       /* prev circle: light gray */
   transition: transform .25s var(--ease), background .25s var(--ease), opacity .25s;
 }
-.nav-btn svg { width: 22px; height: 22px; }
+.nav-btn svg { width: 24px; height: 24px; }
 .nav-btn:hover { transform: scale(1.06); }
 .nav-btn:active { transform: scale(.94); }
-.nav-btn--next { background: var(--green); color: #1d2510; }
-.nav-btn:disabled { opacity: .4; cursor: default; transform: none; }
+.nav-btn--next { background: var(--green); color: var(--ink); }  /* next: green + dark arrow */
+.nav-btn:disabled { opacity: .55; cursor: default; transform: none; }
 
 /* Desktop progress line (hidden on small screens) */
 .slider__progress {
@@ -201,6 +206,7 @@ html, body {
 }
 
 .card__no {
+  font-family: var(--font-display);
   font-size: clamp(30px, 3vw, 40px);
   font-weight: 800;
   color: var(--green);
@@ -212,8 +218,10 @@ html, body {
 .card__metric { margin: 0 0 18px; }
 .card__metric b {
   display: block;
+  font-family: var(--font-display);
   font-size: 20px;
-  font-weight: 800;
+  font-weight: 700;
+  letter-spacing: -0.2px;
 }
 .card__metric span {
   display: block;
@@ -269,10 +277,12 @@ html, body {
 .card__download:hover { transform: translateY(-2px); }
 .card__download-text b {
   display: block;
+  font-family: var(--font-display);
   font-size: 13px;
-  font-weight: 800;
+  font-weight: 700;
   text-transform: uppercase;
   letter-spacing: .3px;
+  color: var(--ink);
 }
 .card__download-text small { font-size: 12px; color: #6a767d; }
 .card__download-icon {
@@ -281,7 +291,7 @@ html, body {
   height: 40px;
   border-radius: 50%;
   background: var(--green);
-  color: #1d2510;
+  color: var(--ink);
   display: grid;
   place-items: center;
 }

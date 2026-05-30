@@ -24,13 +24,12 @@ const CENTER_SET = 1;
 const LERP = 0.13;
 const ACTIVE_SCALE = 1.045;
 const STACK = {
-  maxDepth: 4.2,
-  offsetX: 13,
-  scaleStep: 0.055,
-  opacityStep: 0.16,
-  minOpacity: 0.22,
+  maxDepth: 4,        // how many cards are visible in the deck
+  offsetX: 18,        // px each deeper card peeks to the LEFT (only axis)
+  fadeBand: 1.1,      // only the deepest ~1 card fades out (seamless loop)
   parallax: 0.055,
 };
+const STACK_LIGHT = [228, 231, 234];  // colour the deck fades TOWARD (near-white)
 
 const track = document.getElementById('track');
 const tpl = document.getElementById('card-tpl');
@@ -83,7 +82,6 @@ let cardW = 0;
 let step = 0;
 let loopWidth = 1;
 let viewportW = 0;
-let stackSpan = 0;
 let pos = 0;
 let target = 0;
 
@@ -104,7 +102,6 @@ function measure() {
   step = cardW + readVar('--gap');
   loopWidth = CARDS.length * step;
   viewportW = Math.max(window.innerWidth, viewport.getBoundingClientRect().width);
-  stackSpan = step * STACK.maxDepth;
 
   pos = loopWidth * CENTER_SET + phase;
   target = pos;
@@ -124,41 +121,47 @@ function normalizeLoop() {
 /* ---------- 5. Continuous card transform calculation ---------- */
 function getCardState(rawX) {
   let x = rawX;
+  let y = 0;
   let scaleX = 1;
   let scaleY = 1;
   let opacity = 1;
   let parallax = rawX * STACK.parallax;
+  let stackT = -1;   // -1 = not stacked; 0..1 = how deep in the deck (for colour)
 
   if (rawX < 0) {
-    // Stacked cards shrink uniformly as they pile up on the left.
+    // Cards that passed the left edge fold into a deck: each deeper card
+    // peeks a little to the LEFT only (no vertical shift) and keeps the
+    // SAME size as the front card, just getting lighter with depth.
     const depth = clamp(-rawX / step, 0, STACK.maxDepth);
     x = -depth * STACK.offsetX;
-    scaleX = scaleY = 1 - depth * STACK.scaleStep;
-    opacity = Math.max(1 - depth * STACK.opacityStep, STACK.minOpacity);
+    stackT = clamp(depth / STACK.maxDepth, 0, 1);
+    // Keep the deck solid; fade out ONLY the very deepest card so it can
+    // recycle to the right edge without a visible pop.
+    opacity = clamp((STACK.maxDepth - depth) / STACK.fadeBand, 0, 1);
     parallax = 0;
   } else {
-    // Flowing cards keep their full WIDTH, so the 5px gap between cards
-    // stays exact on every device. The active (left-edge) card only
-    // grows in HEIGHT to stand out — that never eats the spacing.
+    // Flowing cards keep their full WIDTH, so the gap between cards stays
+    // exact on every device. The active (left-edge) card only grows in
+    // HEIGHT to stand out — that never eats the spacing.
     const focus = 1 - clamp(rawX / step, 0, 1);
     scaleY = 1 + focus * (ACTIVE_SCALE - 1);
   }
 
   const farRight = rawX > viewportW + cardW * 2;
-  const farLeft = rawX < -stackSpan - cardW;
 
   return {
     x,
+    y,
     scaleX,
     scaleY,
-    opacity: farRight || farLeft ? 0 : opacity,
+    opacity: farRight ? 0 : opacity,
     // Deck rule: the closer a card is to the left (active) edge, the
     // higher it sits. So the selected green card is always on top and
-    // every card to the right slides UNDER the previous one, keeping
-    // the right-hand cards' text readable. Continuous distance => no
-    // sudden z-index jumps.
+    // every card to the right slides UNDER the previous one. Continuous
+    // distance => no sudden z-index jumps.
     z: Math.round(1e6 - Math.abs(rawX)),
     parallax,
+    stackT,
   };
 }
 
@@ -175,13 +178,17 @@ function render() {
     card.el.classList.toggle('is-active', isActive);
     if (isActive) {
       card.el.style.background = '';
+    } else if (state.stackT >= 0) {
+      // deck cards lighten the deeper they sit
+      const [r, g, b] = lerpColor(DARK, STACK_LIGHT, state.stackT);
+      card.el.style.background = `rgb(${r}, ${g}, ${b})`;
     } else {
-      const depthTint = rawX >= 0 ? clamp(rawX / (step * 4), 0, 1) : 0;
+      const depthTint = clamp(rawX / (step * 4), 0, 1);
       const [r, g, b] = lerpColor(DARK, GRAY, depthTint);
       card.el.style.background = `rgb(${r}, ${g}, ${b})`;
     }
 
-    card.el.style.transform = `translate3d(${state.x}px, 0, 0) scale3d(${state.scaleX}, ${state.scaleY}, 1)`;
+    card.el.style.transform = `translate3d(${state.x}px, ${state.y}px, 0) scale3d(${state.scaleX}, ${state.scaleY}, 1)`;
     card.el.style.opacity = state.opacity;
     card.el.style.zIndex = state.z;
     card.inner.style.transform = `translate3d(${state.parallax}px, 0, 0)`;
