@@ -51,8 +51,8 @@ html, body {
   margin: 0 auto;
   padding: 0 var(--page-pad);
   display: grid;
-  grid-template-columns: minmax(260px, 34%) minmax(0, 1fr);
-  gap: clamp(24px, 4vw, 56px);
+  grid-template-columns: minmax(min(100%, 520px), 38%) minmax(0, 1fr);
+  gap: clamp(56px, 8vw, 120px);
   align-items: center;
   overflow: visible;
 }
@@ -76,9 +76,13 @@ html, body {
   letter-spacing: -0.5px;
   text-transform: uppercase;
   max-width: 100%;
-  overflow-wrap: anywhere;
+  overflow-wrap: normal;
+  word-break: normal;
 }
-.slider__title .accent { color: var(--green); }
+.slider__title .accent {
+  color: var(--green);
+  white-space: nowrap;
+}
 
 /* Round arrow buttons */
 .slider__nav {

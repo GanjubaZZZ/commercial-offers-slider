@@ -198,13 +198,19 @@ function nudge(dir) {
   target = Math.round(target / step) * step + dir * step;
 }
 
-let wheelSnap;
+let lastWheelStepAt = 0;
 viewport.addEventListener('wheel', (e) => {
   const delta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
   e.preventDefault();
-  target += delta;
-  clearTimeout(wheelSnap);
-  wheelSnap = setTimeout(snap, 120);
+
+  // One physical mouse-wheel notch should move exactly one card.
+  // Browsers often emit several wheel events per notch, so the small
+  // cooldown prevents accidental jumps across multiple cards.
+  const now = performance.now();
+  if (Math.abs(delta) < 1 || now - lastWheelStepAt < 260) return;
+
+  nudge(delta > 0 ? 1 : -1);
+  lastWheelStepAt = now;
 }, { passive: false });
 
 let dragging = false;
