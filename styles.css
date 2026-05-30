@@ -1,27 +1,17 @@
-/* ============================================================
-   PUBLIC COMMERCIAL OFFERS — horizontal card slider
-   Palette taken from the design references.
-   ============================================================ */
 :root {
-  --green:      #a6c93a;   /* lime accent / active card        */
-  --green-dark: #95b82c;   /* download icon circle             */
-  --ink:        #16222e;   /* dark navy headline / dark text   */
-  --card-dark:  #38424b;   /* darkest card background          */
-  --card-gray:  #8c99a0;   /* lightest card background         */
+  --green:      #a6c93a;
+  --green-dark: #95b82c;
+  --ink:        #16222e;
+  --card-dark:  #4f5861;
+  --card-gray:  #828a8f;
   --bg:         #ffffff;
   --white-70:   rgba(255, 255, 255, .72);
   --white-45:   rgba(255, 255, 255, .5);
   --page-pad:   clamp(16px, 5vw, 64px);
-
-  /* Typography: geometric grotesque for display, neutral for body */
   --font-display: "Montserrat", system-ui, sans-serif;
   --font-body:    "Inter", system-ui, sans-serif;
-
-  /* These two are READ by JS to compute card positions.
-     Change them freely per breakpoint below. */
   --card-w: 300px;
   --gap:    20px;
-
   --radius: 22px;
   --ease:   cubic-bezier(.22, .61, .36, 1);
 }
@@ -34,62 +24,61 @@ html, body {
   color: var(--ink);
   font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
-  /* Clip ONLY at the real monitor edge so cards can bleed full-width
-     to the right without ever creating a horizontal page scrollbar. */
   overflow-x: hidden;
 }
 
-/* ----------------------------------------------------------------
-   Section shell
----------------------------------------------------------------- */
 .slider {
   width: 100%;
   padding: clamp(40px, 7vw, 96px) 0;
-  /* IMPORTANT: never clip on X. Cards must escape the content grid
-     and run to the very edge of the screen (full-bleed feed). */
   overflow: visible;
 }
 
 .slider__inner {
   max-width: 1440px;
+  width: 100%;
   margin: 0 auto;
   padding: 0 var(--page-pad);
   display: grid;
   grid-template-columns: minmax(min(100%, 520px), 38%) minmax(0, 1fr);
   gap: clamp(56px, 8vw, 120px);
-  align-items: center;
+  align-items: start;
   overflow: visible;
 }
 
-/* ----------------------------------------------------------------
-   Heading + controls (left column on desktop)
----------------------------------------------------------------- */
+.slider__cards {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  min-width: 0;
+  overflow: visible;
+}
+
 .slider__head {
   position: relative;
   display: flex;
   flex-direction: column;
   gap: 36px;
   min-width: 0;
+  overflow: visible;
 }
 
 .slider__title {
   margin: 0;
   font-family: var(--font-display);
   font-weight: 800;
-  font-size: clamp(34px, 4.4vw, 64px);
+  font-size: clamp(28px, 4.4vw, 64px);
   line-height: .98;
   letter-spacing: -0.5px;
   text-transform: uppercase;
   max-width: 100%;
-  overflow-wrap: normal;
-  word-break: normal;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 .slider__title .accent {
   color: var(--green);
   white-space: nowrap;
 }
 
-/* Round arrow buttons */
 .slider__nav {
   display: flex;
   gap: clamp(10px, 2vw, 14px);
@@ -106,22 +95,23 @@ html, body {
   display: grid;
   place-items: center;
   cursor: pointer;
-  color: #8d999f;            /* prev arrow: muted gray */
-  background: #e6e8ea;       /* prev circle: light gray */
+  color: #8d999f;
+  background: #e6e8ea;
   transition: transform .25s var(--ease), background .25s var(--ease), opacity .25s;
 }
 .nav-btn svg { width: 24px; height: 24px; }
 .nav-btn:hover { transform: scale(1.06); }
 .nav-btn:active { transform: scale(.94); }
-.nav-btn--next { background: var(--green); color: var(--ink); }  /* next: green + dark arrow */
+.nav-btn--next { background: var(--green); color: var(--ink); }
 .nav-btn:disabled { opacity: .55; cursor: default; transform: none; }
 
-/* Desktop progress line (hidden on small screens) */
 .slider__progress {
   display: flex;
   align-items: center;
-  gap: 18px;
-  margin-top: 8px;
+  gap: 0;
+  width: min(calc(var(--card-w) * 2 + var(--gap) + 62px), 100%);
+  max-width: 100%;
+  margin-top: 4px;
 }
 .slider__progress-track {
   position: relative;
@@ -138,15 +128,15 @@ html, body {
   border-radius: 2px;
   transition: width .1s linear;
 }
-.slider__progress-arrow { flex: 0 0 auto; width: 48px; height: 48px; }
+.slider__progress-arrow {
+  flex: 0 0 auto;
+  width: 48px;
+  height: 48px;
+  margin-left: 14px;
+}
 
-/* The arrows in .slider__nav are the primary control on tablet/mobile.
-   On desktop we lean on the progress arrow, so hide the duplicate. */
 .slider__nav { display: none; }
 
-/* ----------------------------------------------------------------
-   Viewport + track (right column)
----------------------------------------------------------------- */
 .slider__viewport {
   position: relative;
   width: 100%;
@@ -161,21 +151,15 @@ html, body {
   margin: 0;
   padding: 0;
   position: relative;
-  min-width: 100vw;
+  width: 100%;
   height: 430px;
-  touch-action: pan-y;         /* allow vertical page scroll, we handle X */
+  touch-action: pan-y;
   cursor: grab;
   overflow: visible;
   transform-style: preserve-3d;
 }
 .slider__track.is-dragging { cursor: grabbing; }
 
-/* ----------------------------------------------------------------
-   Card
-   Each card is absolutely positioned; JS sets translate3d / scale /
-   opacity / z-index every frame. transform-origin left so the
-   stack collapses neatly against the header edge without clipping.
----------------------------------------------------------------- */
 .card {
   position: absolute;
   top: 0;
@@ -183,16 +167,17 @@ html, body {
   width: var(--card-w);
   height: 100%;
   border-radius: var(--radius);
-  background: var(--card-dark);
+  background-color: var(--card-dark);
   color: #fff;
-  will-change: transform, opacity, z-index;
-  transform-origin: left center;
+  will-change: transform, z-index;
+  transform-origin: left top;
   backface-visibility: hidden;
   transform: translate3d(0, 0, 0);
   box-shadow: 0 24px 50px -28px rgba(20, 32, 43, .55);
   overflow: hidden;
   user-select: none;
   pointer-events: auto;
+  isolation: isolate;
 }
 
 .card__inner {
@@ -201,7 +186,7 @@ html, body {
   padding: 30px 28px;
   display: flex;
   flex-direction: column;
-  will-change: transform;      /* parallax target */
+  will-change: transform;
   backface-visibility: hidden;
 }
 
@@ -238,7 +223,6 @@ html, body {
   color: var(--white-70);
 }
 
-/* footer: eye + download pill */
 .card__footer {
   display: flex;
   align-items: center;
@@ -263,6 +247,7 @@ html, body {
 
 .card__download {
   flex: 1;
+  min-width: 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -275,6 +260,10 @@ html, body {
   transition: transform .2s var(--ease);
 }
 .card__download:hover { transform: translateY(-2px); }
+.card__download-text {
+  min-width: 0;
+  overflow: hidden;
+}
 .card__download-text b {
   display: block;
   font-family: var(--font-display);
@@ -297,7 +286,21 @@ html, body {
 }
 .card__download-icon svg { width: 20px; height: 20px; }
 
-/* ---- ACTIVE (leftmost) card: lime highlight, dark text ---- */
+.card.is-flow-1 { background-color: #565f68; }
+.card.is-flow-2 { background-color: #636b73; }
+.card.is-flow-3 { background-color: #72797f; }
+.card.is-flow-4 { background-color: #828a8f; }
+
+.card.is-stacked {
+  box-shadow: none;
+}
+.card.is-stack-1 { background-color: #4f5861; }
+.card.is-stack-2 { background-color: #4a535c; }
+.card.is-stack-3 { background-color: #454d55; }
+.card.is-stack-4 { background-color: #404850; }
+.card.is-stack-5 { background-color: #3b4249; }
+.card.is-stack-6 { background-color: #363d44; }
+
 .card.is-active {
   background: var(--green);
   color: var(--ink);
@@ -307,45 +310,76 @@ html, body {
 .card.is-active .card__metric span,
 .card.is-active .card__desc { color: rgba(22, 32, 43, .72); }
 
-/* ============================================================
-   RESPONSIVE
-   ============================================================ */
+.card.is-stacked .card__no { color: var(--green); }
+.card.is-stacked .card__metric b { color: #fff; }
+.card.is-stacked .card__metric span,
+.card.is-stacked .card__desc { color: var(--white-70); }
 
-/* Tablet & mobile: heading on top, arrows top-right, cards below */
+@media (min-width: 1024px) {
+  .slider__cards {
+    width: calc(100% + max(0px, 50vw - 50%));
+    margin-right: calc(50% - 50vw);
+    overflow: visible;
+  }
+}
+
 @media (max-width: 1023px) {
   :root {
     --page-pad: clamp(18px, 4.5vw, 40px);
-    --card-w: min(360px, calc(100vw - (var(--page-pad) * 2)));
   }
   .slider__track { height: 460px; }
   .slider__inner {
     grid-template-columns: 1fr;
-    gap: 30px;
+    gap: clamp(24px, 5vw, 30px);
     align-items: start;
+  }
+  .slider__cards {
+    width: 100%;
+    min-width: 0;
+    overflow: visible;
+  }
+  .slider__viewport {
+    width: 100%;
+    overflow-x: clip;
   }
   .slider__head {
     flex-direction: row;
     flex-wrap: wrap;
     align-items: flex-start;
     justify-content: space-between;
-    gap: 20px;
+    gap: 16px;
   }
   .slider__title {
-    flex: 1 1 min(620px, 100%);
-    font-size: clamp(42px, 8vw, 72px);
+    flex: 1 1 auto;
+    min-width: 0;
+    font-size: clamp(32px, 7vw, 72px);
   }
-  .slider__nav { display: flex; }       /* show arrows */
-  .slider__progress { display: none; }  /* hide desktop line */
-  .slider__viewport {
-    overflow: visible;
+  .slider__nav { display: flex; }
+  .slider__progress { display: none; }
+}
+
+@media (min-width: 601px) and (max-width: 1023px) {
+  :root {
+    --card-w: min(320px, calc((100vw - (var(--page-pad) * 2) - (var(--gap) * 2)) / 2.05));
+  }
+  .card {
+    width: var(--card-w);
   }
 }
 
-/* Phones */
+@media (max-width: 1200px) and (min-width: 1024px) {
+  .slider__inner {
+    gap: clamp(32px, 5vw, 56px);
+    grid-template-columns: minmax(min(100%, 380px), 36%) minmax(0, 1fr);
+  }
+}
+
 @media (max-width: 600px) {
   :root {
-    --page-pad: 24px;
-    --card-w: min(300px, calc(100vw - (var(--page-pad) * 2)));
+    --page-pad: 20px;
+  }
+  .card {
+    width: 100%;
   }
   .slider {
     padding-block: 42px;
@@ -360,8 +394,11 @@ html, body {
   }
   .slider__title {
     flex: none;
-    font-size: clamp(34px, 10vw, 48px);
+    font-size: clamp(28px, 9vw, 48px);
     letter-spacing: -0.8px;
+  }
+  .slider__title .accent {
+    white-space: normal;
   }
   .slider__nav {
     align-self: flex-end;
@@ -382,8 +419,7 @@ html, body {
 
 @media (max-width: 380px) {
   :root {
-    --page-pad: 18px;
-    --card-w: min(270px, calc(100vw - (var(--page-pad) * 2)));
+    --page-pad: 16px;
   }
   .slider__title {
     font-size: clamp(30px, 10vw, 38px);
@@ -417,7 +453,6 @@ html, body {
   }
 }
 
-/* Respect reduced-motion: kill transitions, JS still snaps */
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; }
 }
